@@ -362,7 +362,7 @@ fudgeRequest account request =
 {-| Create a `Task` to send a signed request over the wire.
 -}
 -- send : Account -> Request a -> Task Error a
-send account request resolver =
+send account request  =
     let
         ( service, req ) =
             fudgeRequest account request
@@ -373,9 +373,9 @@ send account request resolver =
         req2 =
             addHeaders [ AnyQuery "Accept" "*/*" ] req
     in
-    AWS.Http.send service credentials req2 resolver
+    AWS.Http.send service credentials req2 
         |> Task.onError
-            (\error ->
+            (\error ->  
                 (case error of
                     AWS.Http.HttpError err ->
                         HttpError err

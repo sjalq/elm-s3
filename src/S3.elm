@@ -13,6 +13,7 @@
 module S3 exposing
     ( Request
     , send
+    , sendGetBytes
     , listKeys
     , getObject, getFullObject, getHeaders, getObjectWithHeaders
     , putHtmlObject, putPublicObject, putObject
@@ -361,7 +362,7 @@ fudgeRequest account request =
 
 {-| Create a `Task` to send a signed request over the wire.
 -}
--- send : Account -> Request a -> Task Error a
+send : Account -> Request a -> Task Error a
 send account request  =
     let
         ( service, req ) =
@@ -386,6 +387,54 @@ send account request  =
                     |> Task.fail
             )
 
+sendGetBytes account request  =
+    let
+        ( service, req ) =
+            fudgeRequest account request
+
+        credentials =
+            makeCredentials account
+
+        req2 =
+            addHeaders [ AnyQuery "Accept" "*/*" ] req
+    in
+    AWS.Http.sendGetBytes service credentials req2 
+        |> Task.onError
+            (\error ->  
+                (case error of
+                    AWS.Http.HttpError err ->
+                        HttpError err
+
+                    AWS.Http.AWSError err ->
+                        AWSError err
+                )
+                    |> Task.fail
+            )
+
+
+-- sendGetString account request  =
+--     let
+--         ( service, req ) =
+--             fudgeRequest account request
+
+--         credentials =
+--             makeCredentials account
+
+--         req2 =
+--             addHeaders [ AnyQuery "Accept" "*/*" ] req
+--     in
+--     AWS.Http.sendGetString service credentials req2 
+--         |> Task.onError
+--             (\error ->  
+--                 (case error of
+--                     AWS.Http.HttpError err ->
+--                         HttpError err
+
+--                     AWS.Http.AWSError err ->
+--                         AWSError err
+--                 )
+--                     |> Task.fail
+--             )
 
 formatQuery : Query -> List ( String, String )
 formatQuery query =
